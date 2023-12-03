@@ -1,0 +1,16 @@
+{
+  "name": "first",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel index.html"
+  },
+  "author": "David Grayson (dkgrayson@gmail.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^2.10.3",
+    "three": "^0.159.0"
+  }
+}

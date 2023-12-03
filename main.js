@@ -1,7 +1,6 @@
-import * as THREE from 'https://cdn.skypack.dev/three@0.136';
-
-import {FirstPersonControls} from 'https://cdn.skypack.dev/three@0.136/examples/jsm/controls/FirstPersonControls.js';
-
+import * as THREE from 'three';
+import SurfaceTexture from './resources/leaves.jpg';
+import BackgroundImage from './resources/sky.jpg';
 
 const KEYS = {
   'a': 65,
@@ -17,7 +16,7 @@ function clamp(x, a, b) {
 class InputController {
   constructor(target) {
     this.target_ = target || document;
-    this.initialize_();    
+    this.initialize_();
   }
 
   initialize_() {
@@ -134,7 +133,7 @@ class FirstPersonCamera {
   updateCamera_(_) {
     this.camera_.quaternion.copy(this.rotation_);
     this.camera_.position.copy(this.translation_);
-    this.camera_.position.y += Math.sin(this.headBobTimer_ * 10) * 1.5;
+    this.camera_.position.y += Math.sin(this.headBobTimer_ * 10) * .1;
 
     const forward = new THREE.Vector3(0, 0, -1);
     forward.applyQuaternion(this.rotation_);
@@ -233,11 +232,6 @@ class FirstPersonCameraDemo {
   }
 
   initializeDemo_() {
-    // this.controls_ = new FirstPersonControls(
-    //     this.camera_, this.threejs_.domElement);
-    // this.controls_.lookSpeed = 0.8;
-    // this.controls_.movementSpeed = 5;
-
     this.fpsCamera_ = new FirstPersonCamera(this.camera_, this.objects_);
   }
 
@@ -273,101 +267,26 @@ class FirstPersonCameraDemo {
   }
 
   initializeScene_() {
-    const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-      './resources/skybox/posx.jpg',
-      './resources/skybox/negx.jpg',
-      './resources/skybox/posy.jpg',
-      './resources/skybox/negy.jpg',
-      './resources/skybox/posz.jpg',
-      './resources/skybox/negz.jpg',
-  ]);
-
-    texture.encoding = THREE.sRGBEncoding;
-    this.scene_.background = texture;
-
     const mapLoader = new THREE.TextureLoader();
+    const texture = mapLoader.load([
+      BackgroundImage
+  ]);
+    this.scene_.background = texture;
     const maxAnisotropy = this.threejs_.capabilities.getMaxAnisotropy();
-    const checkerboard = mapLoader.load('resources/checkerboard.png');
-    checkerboard.anisotropy = maxAnisotropy;
-    checkerboard.wrapS = THREE.RepeatWrapping;
-    checkerboard.wrapT = THREE.RepeatWrapping;
-    checkerboard.repeat.set(32, 32);
-    checkerboard.encoding = THREE.sRGBEncoding;
+    const surface = mapLoader.load(SurfaceTexture);
+    surface.anisotropy = maxAnisotropy;
+    surface.wrapS = THREE.RepeatWrapping;
+    surface.wrapT = THREE.RepeatWrapping;
+    surface.repeat.set(32, 32);
 
     const plane = new THREE.Mesh(
         new THREE.PlaneGeometry(100, 100, 10, 10),
-        new THREE.MeshStandardMaterial({map: checkerboard}));
+        new THREE.MeshStandardMaterial({map: surface}));
     plane.castShadow = false;
     plane.receiveShadow = true;
     plane.rotation.x = -Math.PI / 2;
     this.scene_.add(plane);
-
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 4, 4),
-      this.loadMaterial_('vintage-tile1_', 0.2));
-    box.position.set(10, 2, 0);
-    box.castShadow = true;
-    box.receiveShadow = true;
-    this.scene_.add(box);
-
-    const concreteMaterial = this.loadMaterial_('concrete3-', 4);
-
-    const wall1 = new THREE.Mesh(
-      new THREE.BoxGeometry(100, 100, 4),
-      concreteMaterial);
-    wall1.position.set(0, -40, -50);
-    wall1.castShadow = true;
-    wall1.receiveShadow = true;
-    this.scene_.add(wall1);
-
-    const wall2 = new THREE.Mesh(
-      new THREE.BoxGeometry(100, 100, 4),
-      concreteMaterial);
-    wall2.position.set(0, -40, 50);
-    wall2.castShadow = true;
-    wall2.receiveShadow = true;
-    this.scene_.add(wall2);
-
-    const wall3 = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 100, 100),
-      concreteMaterial);
-    wall3.position.set(50, -40, 0);
-    wall3.castShadow = true;
-    wall3.receiveShadow = true;
-    this.scene_.add(wall3);
-
-    const wall4 = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 100, 100),
-      concreteMaterial);
-    wall4.position.set(-50, -40, 0);
-    wall4.castShadow = true;
-    wall4.receiveShadow = true;
-    this.scene_.add(wall4);
-
-    // Create Box3 for each mesh in the scene so that we can
-    // do some easy intersection tests.
-    const meshes = [
-      plane, box, wall1, wall2, wall3, wall4];
-
     this.objects_ = [];
-
-    for (let i = 0; i < meshes.length; ++i) {
-      const b = new THREE.Box3();
-      b.setFromObject(meshes[i]);
-      this.objects_.push(b);
-    }
-
-    // Crosshair
-    const crosshair = mapLoader.load('resources/crosshair.png');
-    crosshair.anisotropy = maxAnisotropy;
-
-    this.sprite_ = new THREE.Sprite(
-      new THREE.SpriteMaterial({map: crosshair, color: 0xffffff, fog: false, depthTest: false, depthWrite: false}));
-    this.sprite_.scale.set(0.15, 0.15 * this.camera_.aspect, 1)
-    this.sprite_.position.set(0, 0, -10);
-
-    this.uiScene_.add(this.sprite_);
   }
 
   initializeLights_() {
